@@ -1,12 +1,19 @@
 from tkinter import *
 from PIL import Image, ImageTk, ImageEnhance
-import random, os
+import random, os, sys
 
 # --- Configuración ---
 GRID = 10           # Tamaño del rompecabezas (GRID x GRID)
 FRAMERATE = 80      # Milisegundos por frame
 FACTOR_BRILLO = 0.9
-CARPETA_PATRONES = os.path.join(os.path.dirname(__file__), "..", "Assets", "Patrones")
+
+# --- Ruta de assets compatible con PyInstaller ---
+if getattr(sys, 'frozen', False):
+    # Ejecutable
+    CARPETA_BASE = os.path.join(sys._MEIPASS, 'Assets', 'Patrones')
+else:   
+    # Modo desarrollo
+    CARPETA_BASE = os.path.join(os.path.dirname(__file__), "..", "Assets", "Patrones")
 
 # --- Variables globales ---
 frames_originales = []      # Solo PIL.Image
@@ -20,7 +27,7 @@ frame_actual = []
 # --- Función para elegir patrón ---
 def obtener_patron(n):
     nombre_archivo = f"Patron{n}.gif"
-    ruta = os.path.join(CARPETA_PATRONES, nombre_archivo)
+    ruta = os.path.join(CARPETA_BASE, nombre_archivo)
     if not os.path.exists(ruta):
         raise FileNotFoundError(f"No existe el archivo: {ruta}")
     return ruta

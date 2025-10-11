@@ -1,21 +1,11 @@
 from tkinter import *
-from PIL import Image, ImageTk, ImageEnhance
-import random, os
-import Rompecabezas
-import UI
+import pantalla_titulo
 
-
-# --- Inicialización ---
-ventana = Tk() #Crea la ventana 
+ventana = Tk()
 ventana.title("Rompecabezas Animado")
-ventana.state('zoomed') #Acomoda todo segun tamaño de pantalla
-ventana.attributes('-fullscreen', True) #Pantalla completa
+ventana.state('zoomed')
+ventana.attributes('-fullscreen', True)
 
-patron_escogido = Rompecabezas.obtener_patron(1)
-
-Rompecabezas.mezclar_piezas()
-Rompecabezas.cargar_frames(patron_escogido)
-Rompecabezas.crear_grid(ventana)
-Rompecabezas.animar(ventana)
-
+pantalla_titulo.mostrar_pantalla_titulo(ventana)
 ventana.mainloop()
+    
