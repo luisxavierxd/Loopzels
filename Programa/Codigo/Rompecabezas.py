@@ -3,16 +3,15 @@ from PIL import Image, ImageTk, ImageEnhance
 import random, os, sys
 
 # --- Configuración ---
-GRID = 10           # Tamaño del rompecabezas (GRID x GRID)
+GRID = 0            # Tamaño del rompecabezas (GRID x GRID) Se actualiza en el menu principal
 FRAMERATE = 80      # Milisegundos por frame
 FACTOR_BRILLO = 0.9
+TAM_PUZZLE = 600    # Tamaño total del rompecabezas en píxeles (cuadrado)
 
 # --- Ruta de assets compatible con PyInstaller ---
 if getattr(sys, 'frozen', False):
-    # Ejecutable
     CARPETA_BASE = os.path.join(sys._MEIPASS, 'Assets', 'Patrones')
-else:   
-    # Modo desarrollo
+else:
     CARPETA_BASE = os.path.join(os.path.dirname(__file__), "..", "Assets", "Patrones")
 
 # --- Variables globales ---
@@ -44,8 +43,9 @@ def cargar_frames(ruta):
     global frames_originales, cuadros_totales, frame_actual
     gif = Image.open(ruta)
     cuadros_totales = gif.n_frames
-    ancho, alto = gif.size
-    pw, ph = ancho // GRID, alto // GRID
+
+    # Cada pieza tendrá tamaño proporcional a TAM_PUZZLE / GRID
+    pw, ph = TAM_PUZZLE // GRID, TAM_PUZZLE // GRID
 
     frames_originales.clear()
     frames_originales.extend([[] for _ in range(GRID**2)])
@@ -53,13 +53,14 @@ def cargar_frames(ruta):
     for f in range(cuadros_totales):
         gif.seek(f)
         frame = gif.convert("L")  # Escala de grises
+        # Redimensionar el frame completo al tamaño del puzzle
+        frame = frame.resize((TAM_PUZZLE, TAM_PUZZLE), Image.Resampling.LANCZOS)
         for r in range(GRID):
             for c in range(GRID):
                 idx = r*GRID + c
                 recorte = frame.crop((c*pw, r*ph, (c+1)*pw, (r+1)*ph))
                 frames_originales[idx].append(recorte)
 
-    # Inicializar frame_actual según orden_actual
     frame_actual = [0] * len(orden_actual)
 
 # --- Crear grid de Canvas ---
@@ -72,9 +73,10 @@ def crear_grid(ventana):
     contenedor = Frame(ventana, bg=ventana.cget("bg"))
     contenedor.place(relx=0.5, rely=0.5, anchor="center")
 
+    pw, ph = TAM_PUZZLE // GRID, TAM_PUZZLE // GRID
+
     for i, pieza in enumerate(orden_actual):
         r, c = divmod(i, GRID)
-        pw, ph = frames_originales[0][0].size
 
         frame_boton = Frame(contenedor, width=pw, height=ph, bg=ventana.cget("bg"))
         frame_boton.grid_propagate(False)
@@ -133,3 +135,4 @@ def animar(ventana):
         brillante = (pieza_seleccionada == i)
         actualizar_canvas(i, brillante=brillante)
     ventana.after(FRAMERATE, lambda: animar(ventana))
+

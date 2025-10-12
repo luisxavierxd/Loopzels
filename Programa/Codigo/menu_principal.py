@@ -11,7 +11,7 @@ def mostrar_menu_principal(ventana):
 
     # --- Menú superior: selección de tamaño ---
     Label(frame, text="Tamaño del Grid:", font=("Arial", 20), fg="white", bg="gray10").pack(pady=10)
-    grid_var = StringVar(value="10x10")
+    grid_var = StringVar(value="6x6")
     opciones = ["2x2", "4x4", "6x6", "8x8", "10x10"]
     OptionMenu(frame, grid_var, *opciones).pack(pady=10)
 
