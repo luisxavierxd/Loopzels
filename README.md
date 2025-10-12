@@ -24,5 +24,4 @@ Librerías necesarias:
   pip install pillow
   pip install tkinter
   pip install customtkinter
-
 ```
