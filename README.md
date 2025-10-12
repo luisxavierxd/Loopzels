@@ -19,3 +19,10 @@ Compatibilidad Total: Funciona con Python 3.x y las librerías Tkinter y Pillow.
 Python 3.x
 
 Librerías necesarias:
+
+``` 
+  pip install pillow
+  pip install tkinter
+  pip install customtkinter
+
+```
