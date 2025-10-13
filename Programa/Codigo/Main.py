@@ -2,6 +2,9 @@
 import tkinter as tk
 import pantalla_titulo
 
+# Variable global para color de fondo
+BG_COLOR = "#383838"
+
 # --- Inicialización de la ventana ---
 ventana = tk.Tk()
 ventana.attributes('-fullscreen', True)

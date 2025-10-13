@@ -1,3 +1,5 @@
+# Rompecabezas.py
+
 from tkinter import *
 from PIL import Image, ImageTk, ImageEnhance
 import random, os, sys
@@ -22,6 +24,9 @@ botones = []
 pieza_seleccionada = None
 cuadros_totales = 0
 frame_actual = []
+mostrar_victoria_callback = None
+
+animacion_after_id = None
 
 # --- Función para elegir patrón ---
 def obtener_patron(n):
@@ -36,7 +41,8 @@ def mezclar_piezas():
     global orden_actual, orden_correcto
     orden_correcto = list(range(GRID**2))
     orden_actual = list(range(GRID**2))
-    random.shuffle(orden_actual)
+    while orden_actual == orden_correcto:
+        random.shuffle(orden_actual)
 
 # --- Cargar frames solo como PIL.Image ---
 def cargar_frames(ruta):
@@ -112,6 +118,12 @@ def click_pieza(i):
             actualizar_canvas(idx, brillante=False)
         pieza_seleccionada = None
 
+        # --- Verificar victoria ---
+        if puzzle_completo():
+            if 'mostrar_victoria_callback' in globals():
+                mostrar_victoria_callback()
+
+
 # --- Actualizar canvas de una pieza ---
 def actualizar_canvas(idx, brillante=False):
     canvas = botones[idx]
@@ -126,13 +138,17 @@ def actualizar_canvas(idx, brillante=False):
     canvas.image = img_tk  # mantener referencia
 
 # --- Animación ---
-def animar(ventana):
-    global frame_actual
+def animar(parent):
+    global frame_actual, animacion_after_id
     for i, idx in enumerate(orden_actual):
         if idx >= len(frame_actual):
             frame_actual.append(0)
         frame_actual[idx] = (frame_actual[idx] + 1) % cuadros_totales
         brillante = (pieza_seleccionada == i)
         actualizar_canvas(i, brillante=brillante)
-    ventana.after(FRAMERATE, lambda: animar(ventana))
+    animacion_after_id = parent.after(FRAMERATE, lambda: animar(parent))
 
+
+def puzzle_completo():
+    """Retorna True si el rompecabezas está resuelto"""
+    return orden_actual == orden_correcto
