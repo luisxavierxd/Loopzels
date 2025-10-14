@@ -1,6 +1,7 @@
 # main.py
 import tkinter as tk
 import pantalla_titulo
+import audio
 
 # Variable global para color de fondo
 BG_COLOR = "#383838"
@@ -10,6 +11,9 @@ ventana = tk.Tk()
 ventana.attributes('-fullscreen', True)
 ventana.configure(bg="#383838")
 ventana.title("Rompecabezas Animado")
+
+# Inicializar audio de forma segura
+audio.inicializar_audio()
 
 # Mostrar pantalla de título
 pantalla_titulo.mostrar_pantalla_titulo(ventana)

@@ -150,5 +150,5 @@ def animar(parent):
 
 
 def puzzle_completo():
-    """Retorna True si el rompecabezas está resuelto"""
+    #Retorna True si el rompecabezas está resuelto
     return orden_actual == orden_correcto

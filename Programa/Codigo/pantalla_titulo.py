@@ -5,6 +5,7 @@ import tkinter as tk
 import customtkinter as ctk
 from PIL import Image, ImageTk, ImageSequence, ImageEnhance, ImageOps
 import menu_principal
+import audio
 
 # --- CONFIGURACIÓN ---
 TIEMPO_ROTACION = 10000

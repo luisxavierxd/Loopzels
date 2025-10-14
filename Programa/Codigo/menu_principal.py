@@ -8,7 +8,7 @@ import random, os, sys, time
 
 # --- Configuración global ---
 FRAMERATE = 80
-FACTOR_BRILLO = 0.9
+FACTOR_BRILLO = 0.9 
 TAM_PUZZLE = 600
 
 timer_after_id = None
@@ -21,7 +21,6 @@ inicio_tiempo = None
 frames_preview = []
 frame_preview = 0
 
-# -------------------- Menú Principal --------------------
 def mostrar_menu_principal(ventana):
     global frames_preview, frame_preview
 
@@ -32,12 +31,20 @@ def mostrar_menu_principal(ventana):
     menu_frame = Frame(ventana, bg="gray10")
     menu_frame.pack(fill=BOTH, expand=True)
 
-    # --- Selección tamaño grid ---
-    Label(menu_frame, text="Tamaño del Grid:", font=("Arial", 20), fg="white", bg="gray10").pack(pady=10)
-    tamanios = [2, 4, 6, 8, 10]
-    grid_var = IntVar(value=6)
+    # --- Frames de relleno para centrar verticalmente ---
+    Frame(menu_frame, bg="gray10").pack(expand=True)  # relleno superior
 
-    botones_frame = Frame(menu_frame, bg="gray10")
+    contenido_frame = Frame(menu_frame, bg="gray10")
+    contenido_frame.pack()  # contenido centrado sin expandir
+
+    Frame(menu_frame, bg="gray10").pack(expand=True)  # relleno inferior
+
+    # --- Selección tamaño grid ---
+    Label(contenido_frame, text="Tamaño del Grid:", font=("Arial", 20), fg="white", bg="gray10").pack(pady=10)
+    tamanios = [2, 4, 6, 8, 10]
+    grid_var = IntVar(value=2)
+
+    botones_frame = Frame(contenido_frame, bg="gray10")
     botones_frame.pack(pady=10)
 
     botones_tam = []
@@ -48,17 +55,15 @@ def mostrar_menu_principal(ventana):
 
     for t in tamanios:
         b = Button(botones_frame, text=f"{t}x{t}", width=6, height=3,
-                   bg="white" if t == 6 else "gray30",
+                   bg="white" if t == 2 else "gray30",
                    fg="black", font=("Arial", 16),
                    command=lambda x=t: seleccionar_tamanio(x))
         b.pack(side=LEFT, padx=5)
         botones_tam.append(b)
 
     # --- Selección de patrones ---
-    Label(menu_frame, text="Selecciona un patrón", fg="white", bg="gray10", font=("Arial", 18)).pack(pady=20)
+    Label(contenido_frame, text="Selecciona un patrón", fg="white", bg="gray10", font=("Arial", 18)).pack(pady=20)
     canvas_size = 200
-    canvas = Canvas(menu_frame, width=canvas_size, height=canvas_size, bg="gray15", highlightthickness=0)
-    canvas.pack(pady=20)
 
     patrones = [f"Patron{i}.gif" for i in range(1, 6)]
     indice = IntVar(value=0)
@@ -75,19 +80,33 @@ def mostrar_menu_principal(ventana):
         indice.set((indice.get() + 1) % len(patrones))
         mostrar_patron()
 
-    nav_frame = Frame(menu_frame, bg="gray10")
-    nav_frame.pack(pady=10)
-    Button(nav_frame, text="<", font=("Arial", 20), command=anterior).pack(side=LEFT, padx=20)
-    Button(nav_frame, text=">", font=("Arial", 20), command=siguiente).pack(side=RIGHT, padx=20)
+    patron_frame = Frame(contenido_frame, bg="gray10")
+    patron_frame.pack(pady=20)
+
+    izq_frame = Frame(patron_frame, bg="gray10", width=40)
+    izq_frame.pack(side=LEFT, fill=Y)
+    Button(izq_frame, text="<", font=("Arial", 20), command=anterior, width=3).pack(expand=True)
+
+    canvas = Canvas(patron_frame, width=canvas_size, height=canvas_size, bg="gray15", highlightthickness=0)
+    canvas.pack(side=LEFT, padx=10)
+
+    der_frame = Frame(patron_frame, bg="gray10", width=40)
+    der_frame.pack(side=LEFT, fill=Y)
+    Button(der_frame, text=">", font=("Arial", 20), command=siguiente, width=3).pack(expand=True)
 
     mostrar_patron()
 
     # --- Botones inferiores ---
-    Button(menu_frame, text="Configuración", font=("Arial", 20),
+    Button(contenido_frame, text="Configuración", font=("Arial", 20),
            command=lambda: configuracion.mostrar_configuracion(ventana)).pack(pady=20)
 
-    Button(menu_frame, text="Jugar", font=("Arial", 24),
+    Button(contenido_frame, text="Jugar", font=("Arial", 24),
            command=lambda: iniciar_juego(ventana, grid_var, indice, menu_frame)).pack(pady=20)
+    
+    Button(contenido_frame, text="Salir", font=("Arial", 24),
+       command=lambda: ventana.quit()).pack(pady=20)
+
+
 
 # -------------------- Vista previa animada --------------------
 def cargar_preview_animado(ruta, canvas):
@@ -151,7 +170,12 @@ def iniciar_juego(ventana, grid_var, indice, menu_frame):
                         bg="#383838", anchor="center")
     label_timer.pack(fill="x")
 
-    # --- Columna derecha: Rompecabezas ---
+    # --- Botón fijo: volver al menú principal debajo del timer ---
+    boton_volver = Button(frame_timer, text="Volver al menú principal", font=("Arial", 14),
+                          command=lambda: volver_menu_principal(ventana))
+    boton_volver.pack(pady=10)
+
+    # --- Columna central: Rompecabezas ---
     frame_juego = Frame(frame_principal, width=TAM_PUZZLE, height=TAM_PUZZLE, bg="#383838")
     frame_juego.pack(side="left", padx=20, pady=20)
 
