@@ -19,13 +19,11 @@ if getattr(sys, 'frozen', False):
 else:
     CARPETA_BASE = os.path.join(os.path.dirname(__file__), "..", "Assets", "Patrones")
 
-
 # --- Fondo animado ---
 class FondoAnimado(tk.Label):
     def __init__(self, master, archivo):
         super().__init__(master)
         self.master = master
-        # Tomar tamaño real de pantalla
         self.ancho = master.winfo_screenwidth()
         self.alto = master.winfo_screenheight()
         self.frames_gray = []
@@ -46,7 +44,6 @@ class FondoAnimado(tk.Label):
         self.frames_color.clear()
         img = Image.open(archivo)
         size = (self.ancho, self.alto)
-
         if archivo.lower().endswith(".gif"):
             for frame in ImageSequence.Iterator(img):
                 f_gray = ImageOps.grayscale(frame).convert("RGBA").resize(size, Image.Resampling.LANCZOS)
@@ -71,7 +68,6 @@ class FondoAnimado(tk.Label):
         self.frames_color = new_color
         self.idx = old_idx % len(new_gray)
 
-
 # --- Pantalla de título ---
 class PantallaTitulo:
     def __init__(self, ventana):
@@ -81,11 +77,8 @@ class PantallaTitulo:
         self.fondo = None
         self.overlay_canvas = None
         self.overlay_img = None
-
         self.screen_w = ventana.winfo_screenwidth()
         self.screen_h = ventana.winfo_screenheight()
-
-        # Ocultar ventana hasta que el primer fondo esté listo
         self.ventana.withdraw()
         if self.archivos:
             self._precargar_primer_fondo()
@@ -125,7 +118,6 @@ class PantallaTitulo:
         size = (self.screen_w, self.screen_h)
         new_gray = []
         new_color = []
-
         if archivo.lower().endswith(".gif"):
             for frame in ImageSequence.Iterator(img):
                 f_gray = ImageOps.grayscale(frame).convert("RGBA").resize(size, Image.Resampling.LANCZOS)
@@ -137,9 +129,8 @@ class PantallaTitulo:
             f_color = img.convert("RGBA").resize(size, Image.Resampling.LANCZOS)
             new_gray = [ImageTk.PhotoImage(f_gray)]
             new_color = [f_color]
-
         return new_gray, new_color
-
+    
     def crear_overlay(self):
         self.w_overlay = int(self.screen_w * OVERLAY_WIDTH_RATIO)
         self.h_overlay = int(self.screen_h * OVERLAY_HEIGHT_RATIO)
@@ -151,27 +142,64 @@ class PantallaTitulo:
         self.overlay_canvas = tk.Canvas(self.ventana, width=self.w_overlay, height=self.h_overlay, highlightthickness=0)
         self.overlay_canvas.place(x=self.x_offset, y=self.y_offset)
 
-        ctk.CTkLabel(self.ventana,
-                     text="ROMPECABEZAS ANIMADO",
-                     font=ctk.CTkFont(size=48, weight="bold"),
-                     fg_color=None,
-                     text_color="white").place(relx=0.5, rely=0.45, anchor="center")
+        # --- Cargar logo.gif ---
+        logo_path = os.path.join(os.path.dirname(__file__), "..", "Assets", "General", "logo.gif")
+        self.logo_img = Image.open(logo_path)
+        self.logo_frames = []
 
-        ctk.CTkButton(self.ventana, text="JUGAR",
-                      width=300, height=60,
-                      font=ctk.CTkFont(size=26),
-                      fg_color="#444444",
-                      hover_color="#555555",
-                      command=lambda: menu_principal.mostrar_menu_principal(self.ventana)).place(relx=0.5, rely=0.6, anchor="center")
+        # Escalar logo proporcionalmente al overlay
+        max_width = int(self.w_overlay * 0.8)
+        max_height = int(self.h_overlay * 0.4)
 
-        ctk.CTkButton(self.ventana, text="SALIR",
-                      width=300, height=60,
-                      font=ctk.CTkFont(size=26),
-                      fg_color="#444444",
-                      hover_color="#555555",
-                      command=self.ventana.destroy).place(relx=0.5, rely=0.7, anchor="center")
+        if self.logo_img.is_animated:
+            for frame in ImageSequence.Iterator(self.logo_img):
+                frame = frame.convert("RGBA")
+                frame.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+                self.logo_frames.append(ImageTk.PhotoImage(frame))
+        else:
+            frame = self.logo_img.convert("RGBA")
+            frame.thumbnail((max_width, max_height), Image.Resampling.LANCZOS)
+            self.logo_frames.append(ImageTk.PhotoImage(frame))
+
+        self.logo_idx = 0
+        self.logo_label = ctk.CTkLabel(self.ventana, image=self.logo_frames[0], text="")
+        self.logo_label.place(relx=0.5, rely=0.45, anchor="center")
+
+        # Botones
+        ctk.CTkButton(
+            self.ventana,
+            text="JUGAR",
+            width=300,
+            height=60,
+            font=ctk.CTkFont(size=26),
+            fg_color="#444444",
+            hover_color="#555555",
+            command=lambda: menu_principal.mostrar_menu_principal(self.ventana)
+        ).place(relx=0.5, rely=0.6, anchor="center")
+        ctk.CTkButton(
+            self.ventana,
+            text="SALIR",
+            width=300,
+            height=60,
+            font=ctk.CTkFont(size=26),
+            fg_color="#444444",
+            hover_color="#555555",
+            command=self.ventana.destroy
+        ).place(relx=0.5, rely=0.7, anchor="center")
+
+        # Inicia la animación del logo si hay más de un frame
+        if len(self.logo_frames) > 1:
+            self.animar_logo()
 
         self.ventana.after(VELOCIDAD_GIF, self.animar_overlay)
+
+    def animar_logo(self):
+        if hasattr(self, "logo_frames") and self.logo_frames:
+            self.logo_label.configure(image=self.logo_frames[self.logo_idx])
+            self.logo_idx = (self.logo_idx + 1) % len(self.logo_frames)
+            self.ventana.after(VELOCIDAD_GIF, self.animar_logo)
+
+
 
     def actualizar_overlay(self):
         if self.fondo and self.fondo.frames_color:
@@ -187,7 +215,6 @@ class PantallaTitulo:
     def animar_overlay(self):
         self.actualizar_overlay()
         self.ventana.after(VELOCIDAD_GIF, self.animar_overlay)
-
 
 def mostrar_pantalla_titulo(ventana):
     PantallaTitulo(ventana)
