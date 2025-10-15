@@ -1,12 +1,16 @@
 # menu_principal.py
 
 from tkinter import *
-from PIL import Image, ImageTk, ImageEnhance
+from PIL import Image, ImageTk, ImageEnhance, ImageOps, ImageEnhance
 import Rompecabezas
 import configuracion
 import random, os, sys, time
 
 # --- Configuración global ---
+# --- Variables globales de fondo ---
+COLOR_FONDO_NEGRO = "red"      # colores del overlay si quieres
+COLOR_FONDO_BLANCO = "yellow"
+ALPHA_OVERLAY = 1
 FRAMERATE = 80
 FACTOR_BRILLO = 0.9 
 TAM_PUZZLE = 600
@@ -28,23 +32,29 @@ def mostrar_menu_principal(ventana):
     for w in ventana.winfo_children():
         w.destroy()
 
-    menu_frame = Frame(ventana, bg="gray10")
-    menu_frame.pack(fill=BOTH, expand=True)
+    screen_w = ventana.winfo_width()
+    screen_h = ventana.winfo_height()
 
-    # --- Frames de relleno para centrar verticalmente ---
-    Frame(menu_frame, bg="gray10").pack(expand=True)  # relleno superior
+    # --- Canvas de fondo ---
+    canvas = Canvas(ventana, width=screen_w, height=screen_h, highlightthickness=0)
+    canvas.pack(fill=BOTH, expand=True)
 
-    contenido_frame = Frame(menu_frame, bg="gray10")
-    contenido_frame.pack()  # contenido centrado sin expandir
+    ruta_fondo = os.path.join(os.path.dirname(__file__), "..", "Assets", "General", "fondo.png")
+    fondo_img = Image.open(ruta_fondo).resize((screen_w, screen_h), Image.Resampling.LANCZOS)
+    fondo_tk = ImageTk.PhotoImage(fondo_img)
+    canvas.background = fondo_tk  # mantener referencia
+    canvas.create_image(0, 0, anchor=NW, image=fondo_tk)
 
-    Frame(menu_frame, bg="gray10").pack(expand=True)  # relleno inferior
+    # --- Frame sobre canvas usando create_window ---
+    menu_frame = Frame(canvas, bg=None)
+    canvas.create_window(screen_w//2, screen_h//2, anchor="center", window=menu_frame)
 
-    # --- Selección tamaño grid ---
-    Label(contenido_frame, text="Tamaño del Grid:", font=("Arial", 20), fg="white", bg="gray10").pack(pady=10)
+    # --- Widgets del menú ---
+    Label(menu_frame, text="Tamaño del Grid:", font=("Arial", 20), fg="white", bg=None).pack(pady=10)
     tamanios = [2, 4, 6, 8, 10]
     grid_var = IntVar(value=2)
 
-    botones_frame = Frame(contenido_frame, bg="gray10")
+    botones_frame = Frame(menu_frame, bg=None)
     botones_frame.pack(pady=10)
 
     botones_tam = []
@@ -61,16 +71,18 @@ def mostrar_menu_principal(ventana):
         b.pack(side=LEFT, padx=5)
         botones_tam.append(b)
 
-    # --- Selección de patrones ---
-    Label(contenido_frame, text="Selecciona un patrón", fg="white", bg="gray10", font=("Arial", 18)).pack(pady=20)
+    # Patrones
+    Label(menu_frame, text="Selecciona un patrón", font=("Arial", 18), fg="white", bg=None).pack(pady=20)
     canvas_size = 200
-
     patrones = [f"Patron{i}.gif" for i in range(1, 6)]
     indice = IntVar(value=0)
 
+    patron_frame = Frame(menu_frame, bg=None)
+    patron_frame.pack(pady=20)
+
     def mostrar_patron():
         ruta = Rompecabezas.obtener_patron(indice.get() + 1)
-        cargar_preview_animado(ruta, canvas)
+        cargar_preview_animado(ruta, canvas_preview)
 
     def anterior():
         indice.set((indice.get() - 1) % len(patrones))
@@ -80,34 +92,21 @@ def mostrar_menu_principal(ventana):
         indice.set((indice.get() + 1) % len(patrones))
         mostrar_patron()
 
-    patron_frame = Frame(contenido_frame, bg="gray10")
-    patron_frame.pack(pady=20)
-
-    izq_frame = Frame(patron_frame, bg="gray10", width=40)
-    izq_frame.pack(side=LEFT, fill=Y)
-    Button(izq_frame, text="<", font=("Arial", 20), command=anterior, width=3).pack(expand=True)
-
-    canvas = Canvas(patron_frame, width=canvas_size, height=canvas_size, bg="gray15", highlightthickness=0)
-    canvas.pack(side=LEFT, padx=10)
-
-    der_frame = Frame(patron_frame, bg="gray10", width=40)
-    der_frame.pack(side=LEFT, fill=Y)
-    Button(der_frame, text=">", font=("Arial", 20), command=siguiente, width=3).pack(expand=True)
+    Button(patron_frame, text="<", font=("Arial", 20), command=anterior, width=3).pack(side=LEFT)
+    canvas_preview = Canvas(patron_frame, width=canvas_size, height=canvas_size, highlightthickness=0, bg=None)
+    canvas_preview.pack(side=LEFT, padx=10)
+    Button(patron_frame, text=">", font=("Arial", 20), command=siguiente, width=3).pack(side=LEFT)
 
     mostrar_patron()
 
-    # --- Botones inferiores ---
-    Button(contenido_frame, text="Configuración", font=("Arial", 20),
+    # Botones inferiores
+    Button(menu_frame, text="Configuración", font=("Arial", 20),
            command=lambda: configuracion.mostrar_configuracion(ventana)).pack(pady=20)
-
-    Button(contenido_frame, text="Jugar", font=("Arial", 24),
+    Button(menu_frame, text="Jugar", font=("Arial", 24),
            command=lambda: iniciar_juego(ventana, grid_var, indice, menu_frame)).pack(pady=20)
+    Button(menu_frame, text="Salir", font=("Arial", 24),
+           command=ventana.quit).pack(pady=20)
     
-    Button(contenido_frame, text="Salir", font=("Arial", 24),
-       command=lambda: ventana.quit()).pack(pady=20)
-
-
-
 # -------------------- Vista previa animada --------------------
 def cargar_preview_animado(ruta, canvas):
     global frames_preview, frame_preview
