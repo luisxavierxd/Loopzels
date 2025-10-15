@@ -10,9 +10,11 @@ import audio
 # --- CONFIGURACIÓN ---
 TIEMPO_ROTACION = 10000
 VELOCIDAD_GIF = 80
-ALPHA_OVERLAY = 0.4
+ALPHA_OVERLAY = 0.7
 OVERLAY_WIDTH_RATIO = 0.7
 OVERLAY_HEIGHT_RATIO = 0.7
+COLOR_FONDO_NEGRO = "red"      # Color para los tonos oscuros
+COLOR_FONDO_BLANCO = "yellow"  # Color para los tonos claros
 
 if getattr(sys, 'frozen', False):
     CARPETA_BASE = os.path.join(sys._MEIPASS, 'Assets', 'Patrones')
@@ -46,15 +48,19 @@ class FondoAnimado(tk.Label):
         size = (self.ancho, self.alto)
         if archivo.lower().endswith(".gif"):
             for frame in ImageSequence.Iterator(img):
-                f_gray = ImageOps.grayscale(frame).convert("RGBA").resize(size, Image.Resampling.LANCZOS)
-                f_color = frame.convert("RGBA").resize(size, Image.Resampling.LANCZOS)
-                self.frames_gray.append(ImageTk.PhotoImage(f_gray))
-                self.frames_color.append(f_color)
+                frame_rgba = frame.convert("RGBA").resize(size, Image.Resampling.LANCZOS)
+                f_gray = ImageOps.grayscale(frame_rgba)
+                f_colorized = ImageOps.colorize(f_gray, black=COLOR_FONDO_NEGRO, white=COLOR_FONDO_BLANCO).convert("RGBA")
+                self.frames_gray.append(ImageTk.PhotoImage(f_colorized))
+                self.frames_color.append(frame_rgba)
         else:
-            f_gray = ImageOps.grayscale(img).convert("RGBA").resize(size, Image.Resampling.LANCZOS)
-            f_color = img.convert("RGBA").resize(size, Image.Resampling.LANCZOS)
-            self.frames_gray = [ImageTk.PhotoImage(f_gray)]
-            self.frames_color = [f_color]
+            frame_rgba = img.convert("RGBA").resize(size, Image.Resampling.LANCZOS)
+            f_gray = ImageOps.grayscale(frame_rgba)
+            f_colorized = ImageOps.colorize(f_gray, black=COLOR_FONDO_NEGRO, white=COLOR_FONDO_BLANCO).convert("RGBA")
+            self.frames_gray = [ImageTk.PhotoImage(f_colorized)]
+            self.frames_color = [frame_rgba]
+
+
 
     def animar(self):
         if self.animando and self.frames_gray:
@@ -120,16 +126,19 @@ class PantallaTitulo:
         new_color = []
         if archivo.lower().endswith(".gif"):
             for frame in ImageSequence.Iterator(img):
-                f_gray = ImageOps.grayscale(frame).convert("RGBA").resize(size, Image.Resampling.LANCZOS)
-                f_color = frame.convert("RGBA").resize(size, Image.Resampling.LANCZOS)
-                new_gray.append(ImageTk.PhotoImage(f_gray))
-                new_color.append(f_color)
+                frame_rgba = frame.convert("RGBA").resize(size, Image.Resampling.LANCZOS)
+                f_gray = ImageOps.grayscale(frame_rgba)
+                f_colorized = ImageOps.colorize(f_gray, black=COLOR_FONDO_NEGRO, white=COLOR_FONDO_BLANCO).convert("RGBA")
+                new_gray.append(ImageTk.PhotoImage(f_colorized))
+                new_color.append(frame_rgba)
         else:
-            f_gray = ImageOps.grayscale(img).convert("RGBA").resize(size, Image.Resampling.LANCZOS)
-            f_color = img.convert("RGBA").resize(size, Image.Resampling.LANCZOS)
-            new_gray = [ImageTk.PhotoImage(f_gray)]
-            new_color = [f_color]
+            frame_rgba = img.convert("RGBA").resize(size, Image.Resampling.LANCZOS)
+            f_gray = ImageOps.grayscale(frame_rgba)
+            f_colorized = ImageOps.colorize(f_gray, black=COLOR_FONDO_NEGRO, white=COLOR_FONDO_BLANCO).convert("RGBA")
+            new_gray = [ImageTk.PhotoImage(f_colorized)]
+            new_color = [frame_rgba]
         return new_gray, new_color
+
     
     def crear_overlay(self):
         self.w_overlay = int(self.screen_w * OVERLAY_WIDTH_RATIO)
@@ -207,10 +216,13 @@ class PantallaTitulo:
             x2 = self.x_offset + self.w_overlay
             y2 = self.y_offset + self.h_overlay
             frame = self.fondo.frames_color[idx].crop((self.x_offset, self.y_offset, x2, y2))
-            img = ImageOps.grayscale(frame).convert("RGBA")
-            img = ImageEnhance.Brightness(img).enhance(ALPHA_OVERLAY)
-            self.overlay_img = ImageTk.PhotoImage(img)
+            img_gray = ImageOps.grayscale(frame)
+            img_colorized = ImageOps.colorize(img_gray, black=COLOR_FONDO_NEGRO, white=COLOR_FONDO_BLANCO).convert("RGBA")
+            img_colorized = ImageEnhance.Brightness(img_colorized).enhance(ALPHA_OVERLAY)
+            self.overlay_img = ImageTk.PhotoImage(img_colorized)
             self.overlay_canvas.create_image(0, 0, anchor="nw", image=self.overlay_img)
+
+
 
     def animar_overlay(self):
         self.actualizar_overlay()
