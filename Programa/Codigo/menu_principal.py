@@ -26,89 +26,134 @@ frames_preview = []
 frame_preview = 0
 
 def mostrar_menu_principal(ventana):
-    global frames_preview, frame_preview
+    global frames_preview, frame_preview, grid_var, indice
 
     # Limpiar ventana
     for w in ventana.winfo_children():
         w.destroy()
 
+    ventana.update_idletasks()
     screen_w = ventana.winfo_width()
     screen_h = ventana.winfo_height()
 
-    # --- Canvas de fondo ---
+    # Canvas principal para fondo
     canvas = Canvas(ventana, width=screen_w, height=screen_h, highlightthickness=0)
     canvas.pack(fill=BOTH, expand=True)
 
+    # Cargar fondo principal
     ruta_fondo = os.path.join(os.path.dirname(__file__), "..", "Assets", "General", "fondo.png")
     fondo_img = Image.open(ruta_fondo).resize((screen_w, screen_h), Image.Resampling.LANCZOS)
     fondo_tk = ImageTk.PhotoImage(fondo_img)
-    canvas.background = fondo_tk  # mantener referencia
+    canvas.background = fondo_tk
     canvas.create_image(0, 0, anchor=NW, image=fondo_tk)
 
-    # --- Frame sobre canvas usando create_window ---
+    # --- Frame central con widgets ---
     menu_frame = Frame(canvas, bg=None)
-    canvas.create_window(screen_w//2, screen_h//2, anchor="center", window=menu_frame)
+    canvas.create_window(screen_w//2, screen_h//2, window=menu_frame, anchor="center")
 
-    # --- Widgets del menú ---
-    Label(menu_frame, text="Tamaño del Grid:", font=("Arial", 20), fg="white", bg=None).pack(pady=10)
-    tamanios = [2, 4, 6, 8, 10]
+    # --- Después de renderizar widgets, colocar un fondo camuflado ---
+    def colocar_fondo_camuflado():
+        menu_frame.update_idletasks()
+        fw, fh = menu_frame.winfo_width(), menu_frame.winfo_height()
+        recorte = fondo_img.crop((
+            (screen_w - fw)//2,
+            (screen_h - fh)//2,
+            (screen_w + fw)//2,
+            (screen_h + fh)//2
+        ))
+        fondo_frame_tk = ImageTk.PhotoImage(recorte)
+        label_fondo = Label(menu_frame, image=fondo_frame_tk, borderwidth=0)
+        label_fondo.place(x=0, y=0, relwidth=1, relheight=1)
+        label_fondo.image = fondo_frame_tk  # mantener referencia
+        label_fondo.lower()  # que quede detrás de los botones
+
+        # --- Selección de tamaño del Grid ---
+    Label(menu_frame, text="Tamaño del Grid:", font=("Arial", 18), fg="white", bg=None).pack(pady=(20,5))
+    tamanios = [2,4,6,8,10]
     grid_var = IntVar(value=2)
 
     botones_frame = Frame(menu_frame, bg=None)
-    botones_frame.pack(pady=10)
+    botones_frame.pack(pady=5)
 
     botones_tam = []
     def seleccionar_tamanio(t):
         grid_var.set(t)
         for b, val in zip(botones_tam, tamanios):
-            b.config(bg="white" if val == t else "gray30")
+            b.config(bg="NONE" if val==t else "gray30")
+            
+    # Cambiamos el fondo del frame que contiene los botones de tamaño
+    botones_frame.config(bg="#64070f")  # <--- color de fondo externo
 
+    botones_tam = []
     for t in tamanios:
-        b = Button(botones_frame, text=f"{t}x{t}", width=6, height=3,
-                   bg="white" if t == 2 else "gray30",
-                   fg="black", font=("Arial", 16),
-                   command=lambda x=t: seleccionar_tamanio(x))
-        b.pack(side=LEFT, padx=5)
+        b = Button(botones_frame, text=f"{t}x{t}", width=4, height=2,
+                bg="gray30", fg="white", font=("Arial",14),
+                activebackground="white", activeforeground="black",
+                command=lambda x=t: seleccionar_tamanio(x))
+        b.pack(side=LEFT, padx=8)  # separación horizontal
         botones_tam.append(b)
 
-    # Patrones
-    Label(menu_frame, text="Selecciona un patrón", font=("Arial", 18), fg="white", bg=None).pack(pady=20)
+
+    # --- Patrón animado centrado con navegación ---
     canvas_size = 200
-    patrones = [f"Patron{i}.gif" for i in range(1, 6)]
+    patrones = [f"Patron{i}.gif" for i in range(1,6)]
     indice = IntVar(value=0)
 
     patron_frame = Frame(menu_frame, bg=None)
-    patron_frame.pack(pady=20)
+    patron_frame.pack(pady=10)  # menos espacio vertical arriba y abajo
 
-    def mostrar_patron():
-        ruta = Rompecabezas.obtener_patron(indice.get() + 1)
-        cargar_preview_animado(ruta, canvas_preview)
+      # Cambiamos el fondo del frame que contiene los botones
+    patron_frame = Frame(menu_frame, bg="#64070f")  # <--- color de fondo externo
+    patron_frame.pack(pady=10)
 
-    def anterior():
-        indice.set((indice.get() - 1) % len(patrones))
-        mostrar_patron()
+    # Botón "<"
+    btn_prev = Button(patron_frame, text="<", width=2,
+                    bg="gray30", fg="white",
+                    activebackground="white", activeforeground="black",
+                    command=lambda: cambiar_patron(-1, canvas_preview))
+    btn_prev.pack(side=LEFT, padx=(0,2), pady=0)
 
-    def siguiente():
-        indice.set((indice.get() + 1) % len(patrones))
-        mostrar_patron()
+    # Frame centrador para el canvas
+    canvas_container = Frame(patron_frame, bg="#64070f")  # mismo color que el frame padre
+    canvas_container.pack(side=LEFT, pady=0)
 
-    Button(patron_frame, text="<", font=("Arial", 20), command=anterior, width=3).pack(side=LEFT)
-    canvas_preview = Canvas(patron_frame, width=canvas_size, height=canvas_size, highlightthickness=0, bg=None)
-    canvas_preview.pack(side=LEFT, padx=10)
-    Button(patron_frame, text=">", font=("Arial", 20), command=siguiente, width=3).pack(side=LEFT)
+    # Canvas del patrón
+    canvas_preview = Canvas(canvas_container, width=canvas_size, height=canvas_size,
+                            highlightthickness=0, bg=None)
+    canvas_preview.pack()
 
-    mostrar_patron()
+    # Botón ">"
+    btn_next = Button(patron_frame, text=">", width=2,
+                    bg="gray30", fg="white",
+                    activebackground="white", activeforeground="black",
+                    command=lambda: cambiar_patron(1, canvas_preview))
+    btn_next.pack(side=LEFT, padx=(2,0), pady=0)
 
-    # Botones inferiores
+
+    # --- Botones verticales: Configuración → Jugar → Salir ---
     Button(menu_frame, text="Configuración", font=("Arial", 20),
-           command=lambda: configuracion.mostrar_configuracion(ventana)).pack(pady=20)
-    Button(menu_frame, text="Jugar", font=("Arial", 24),
-           command=lambda: iniciar_juego(ventana, grid_var, indice, menu_frame)).pack(pady=20)
-    Button(menu_frame, text="Salir", font=("Arial", 24),
-           command=ventana.quit).pack(pady=20)
-    
-# -------------------- Vista previa animada --------------------
-def cargar_preview_animado(ruta, canvas):
+        width=20, command=lambda: configuracion.mostrar_configuracion(ventana)).pack(pady=10)
+    Button(menu_frame, text="Jugar", font=("Arial", 20),
+        width=20, command=lambda: iniciar_juego(ventana, grid_var, indice, menu_frame)).pack(pady=10)
+    Button(menu_frame, text="Salir", font=("Arial", 20),
+        width=20, command=ventana.destroy).pack(pady=10)
+
+    mostrar_patron(canvas_preview)
+
+    # --- Finalmente colocar fondo camuflado ---
+    ventana.after(50, colocar_fondo_camuflado)
+
+
+
+def mostrar_patron(canvas):
+    ruta = os.path.join(os.path.dirname(__file__), "..", "Assets", "Patrones", f"Patron{indice.get()+1}.gif")
+    cargar_preview_recolor(ruta, canvas)
+
+def cambiar_patron(d, canvas):
+    indice.set((indice.get() + d) % 5)
+    mostrar_patron(canvas)
+
+def cargar_preview_recolor(ruta, canvas):
     global frames_preview, frame_preview
     canvas.update_idletasks()
     size = canvas.winfo_width() or 200
@@ -116,26 +161,23 @@ def cargar_preview_animado(ruta, canvas):
     gif = Image.open(ruta)
     frames_preview.clear()
     frame_preview = 0
-    total_frames = gif.n_frames
 
-    for f in range(total_frames):
+    for f in range(gif.n_frames):
         gif.seek(f)
-        frame = gif.convert("L")
-        frame = frame.resize((size, size), Image.LANCZOS)
+        frame = gif.convert("L").resize((size,size), Image.Resampling.LANCZOS)
+        frame = ImageOps.colorize(frame, black=COLOR_FONDO_NEGRO, white=COLOR_FONDO_BLANCO)
         frames_preview.append(ImageTk.PhotoImage(frame))
 
     canvas.delete("all")
     canvas.create_image(size//2, size//2, image=frames_preview[0])
     canvas.image = frames_preview[0]
-
     animar_preview(canvas)
 
 def animar_preview(canvas):
     global frames_preview, frame_preview
     if frames_preview:
         canvas.delete("all")
-        canvas.create_image(canvas.winfo_width()//2, canvas.winfo_height()//2,
-                            image=frames_preview[frame_preview])
+        canvas.create_image(canvas.winfo_width()//2, canvas.winfo_height()//2, image=frames_preview[frame_preview])
         frame_preview = (frame_preview + 1) % len(frames_preview)
         canvas.after(FRAMERATE, lambda: animar_preview(canvas))
 
