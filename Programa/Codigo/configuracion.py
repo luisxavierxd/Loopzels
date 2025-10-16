@@ -5,6 +5,20 @@ import os
 
 color_actual = "#FFFFFF"
 
+import json
+
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
+
+def cargar_config():
+    if os.path.exists(CONFIG_PATH):
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {"volumen": 0.8, "top_tiempos": {}}
+
+def guardar_config(config):
+    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=4)
+
 """
 # --- Slider personalizado comentado temporalmente ---
 class VolumeSlider(Canvas):
@@ -20,24 +34,32 @@ class VolumeSlider(Canvas):
 """
 
 def mostrar_configuracion(ventana):
-    """Muestra el panel de configuración en overlay (Frame)"""
-    overlay = Frame(ventana, bg="#000000")
+    config = cargar_config()
+    overlay = Frame(ventana)
     overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
+
+    # --- Fondo imagen ---
+    ruta_fondo = os.path.join(os.path.dirname(__file__), "..", "Assets", "General", "fondo.png")
+    fondo_img = Image.open(ruta_fondo).resize((ventana.winfo_width(), ventana.winfo_height()), Image.Resampling.LANCZOS)
+    fondo_tk = ImageTk.PhotoImage(fondo_img)
+    Label(overlay, image=fondo_tk).place(x=0, y=0, relwidth=1, relheight=1)
+    overlay.fondo_ref = fondo_tk
 
     panel = Frame(overlay, bg="gray20", bd=4, relief="ridge")
     panel.place(relx=0.5, rely=0.5, anchor="center")
-
     Label(panel, text="Configuración", font=("Arial", 26, "bold"), fg="white", bg="gray20").pack(pady=15)
 
-    # --- Slider personalizado comentado ---
-    # slider = VolumeSlider(panel, width=250, height=50,
-    #                       bar_path=None, knob_path=None, mute_icon_path=None)
-    # slider.pack(pady=20)
-    # Button(panel, text="🔇", font=("Arial", 16), command=slider.toggle_mute).pack(pady=5)
+    # --- Slider personalizado comentado temporalmente ---
+    """
+    slider = VolumeSlider(panel, width=250, height=50,
+                          bar_path=None, knob_path=None, mute_icon_path=None)
+    slider.pack(pady=20)
+    Button(panel, text="🔇", font=("Arial", 16), command=slider.toggle_mute).pack(pady=5)
+    """
 
-    # --- Slider normal de Tkinter para probar ---
+    # --- Slider normal de Tkinter para volumen ---
     Label(panel, text="Volumen:", font=("Arial", 18), fg="white", bg="gray20").pack(pady=(10,0))
-    volumen = DoubleVar(value=50)
+    volumen = DoubleVar(value=config.get("volumen", 0.8)*100)
 
     def actualizar_volumen(val):
         valor = float(val)
@@ -50,6 +72,9 @@ def mostrar_configuracion(ventana):
             audio.sfx_boton.set_volume(pygame_vol)
         if audio.sfx_victoria:
             audio.sfx_victoria.set_volume(pygame_vol)
+        # Guardar en config.json
+        config["volumen"] = pygame_vol
+        guardar_config(config)
 
     Scale(panel, from_=0, to=100, orient=HORIZONTAL, variable=volumen,
           command=actualizar_volumen, length=250).pack(pady=10)
