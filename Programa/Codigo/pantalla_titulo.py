@@ -15,6 +15,7 @@ OVERLAY_WIDTH_RATIO = 0.7
 OVERLAY_HEIGHT_RATIO = 0.7
 COLOR_FONDO_NEGRO = "red"      # Color para los tonos oscuros
 COLOR_FONDO_BLANCO = "yellow"  # Color para los tonos claros
+COLOR_BOTON = "#8b040f"
 
 if getattr(sys, 'frozen', False):
     CARPETA_BASE = os.path.join(sys._MEIPASS, 'Assets', 'Patrones')
@@ -175,24 +176,31 @@ class PantallaTitulo:
         self.logo_label.place(relx=0.5, rely=0.45, anchor="center")
 
         # Botones
-        ctk.CTkButton(
+        # --- Botón JUGAR ---
+        tk.Button(
             self.ventana,
             text="JUGAR",
-            width=300,
-            height=60,
-            font=ctk.CTkFont(size=26),
-            fg_color="#444444",
-            hover_color="#555555",
+            font=("Comic Sans MS", 18, "bold"),
+            bg=COLOR_BOTON,
+            fg="white",
+            activebackground="#E4DE32",   # color al pasar el mouse (hover)
+            activeforeground="black",
+            width=12,                     # ajusta ancho visualmente similar
+            height=1,
             command=lambda: menu_principal.mostrar_menu_principal(self.ventana)
         ).place(relx=0.5, rely=0.6, anchor="center")
-        ctk.CTkButton(
+
+        # --- Botón SALIR ---
+        tk.Button(
             self.ventana,
             text="SALIR",
-            width=300,
-            height=60,
-            font=ctk.CTkFont(size=26),
-            fg_color="#444444",
-            hover_color="#555555",
+            font=("Comic Sans MS", 18, "bold"),
+            bg=COLOR_BOTON,
+            fg="white",
+            activebackground="#E4DE32",
+            activeforeground="black",
+            width=12,
+            height=1,
             command=self.ventana.destroy
         ).place(relx=0.5, rely=0.7, anchor="center")
 

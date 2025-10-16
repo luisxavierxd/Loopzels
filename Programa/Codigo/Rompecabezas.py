@@ -9,6 +9,7 @@ GRID = 0
 FRAMERATE = 80
 FACTOR_BRILLO = 0.9
 TAM_PUZZLE = 600
+botones_activos = True
 
 if getattr(sys, 'frozen', False):
     CARPETA_BASE = os.path.join(sys._MEIPASS, 'Assets', 'Patrones')
@@ -94,7 +95,10 @@ def crear_grid(ventana):
 
 # --- Click ---
 def click_pieza(i):
-    global pieza_seleccionada, orden_actual
+    global pieza_seleccionada, orden_actual, botones_activos
+    if not botones_activos:
+        return  # ignorar clics si los botones están deshabilitados
+
     canvas = botones[i]
 
     if pieza_seleccionada is None:
@@ -112,7 +116,9 @@ def click_pieza(i):
         pieza_seleccionada = None
 
         if puzzle_completo() and mostrar_victoria_callback:
+            botones_activos = False  # <-- deshabilitar botones al ganar
             mostrar_victoria_callback()
+
 
 # --- Actualizar canvas ---
 def actualizar_canvas(idx, brillante=False):

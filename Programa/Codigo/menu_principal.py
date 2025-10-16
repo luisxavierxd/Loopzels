@@ -93,7 +93,18 @@ def mostrar_menu_principal(ventana):
         label_fondo.lower()
 
     # --- Selección de tamaño del Grid ---
-    Label(menu_frame, text="Tamaño del Grid:", font=("Arial", 18), fg="white", bg=None).pack(pady=(20,5))
+    
+    # Después: usar imagen
+    ruta_tamano = os.path.join(os.path.dirname(__file__), "..", "Assets", "General", "tamaño.png")
+    img_tamano = Image.open(ruta_tamano)
+    img_tamano = img_tamano.resize((200, 50), Image.Resampling.LANCZOS)  # ajustar tamaño según convenga
+    img_tamano_tk = ImageTk.PhotoImage(img_tamano)
+    
+    label_tamano = Label(menu_frame, image=img_tamano_tk, bg="#f7aa04")
+    label_tamano.image = img_tamano_tk  # mantener referencia
+    label_tamano.pack(pady=(20,5))
+
+
     tamanios = [2,4,6,8,10]
     grid_var = IntVar(value=2)
 
@@ -107,9 +118,8 @@ def mostrar_menu_principal(ventana):
             b.config(bg="NONE" if val==t else "gray30")
 
     for t in tamanios:
-        b = Button(botones_frame, text=f"{t}x{t}", width=4, height=2,
-                   bg="gray30", fg="white", font=("Arial",14),
-                   activebackground="white", activeforeground="black",
+        b = Button(botones_frame, text=f"{t}x{t}", width=5, height=2,
+                   bg="#8b040f", fg="white", font=("Comic Sans MS",14),
                    command=lambda x=t: seleccionar_tamanio(x))
         b.pack(side=LEFT, padx=8)
         botones_tam.append(b)
@@ -127,9 +137,9 @@ def mostrar_menu_principal(ventana):
 
     # Botón "<"
     btn_prev = Button(patron_frame, text="<", width=2, height=1,
-                      bg="gray30", fg="white",
+                      bg="#8b040f", fg="white",
                       activebackground="white", activeforeground="black",
-                      font=("Arial", 16, "bold"),
+                      font=("Comic Sans MS", 16, "bold"),
                       command=lambda: cambiar_patron(-1, canvas_preview))
     btn_prev.pack(side=LEFT, padx=(0, ESPACIO_LATERAL))
 
@@ -144,18 +154,18 @@ def mostrar_menu_principal(ventana):
 
     # Botón ">"
     btn_next = Button(patron_frame, text=">", width=2, height=1,
-                      bg="gray30", fg="white",
+                      bg="#8b040f", fg="white",
                       activebackground="white", activeforeground="black",
-                      font=("Arial", 16, "bold"),
+                      font=("Comic Sans MS", 16, "bold"),
                       command=lambda: cambiar_patron(1, canvas_preview))
     btn_next.pack(side=LEFT, padx=(ESPACIO_LATERAL, 0))
 
     # --- Botones verticales: Configuración → Jugar → Salir ---
-    Button(menu_frame, text="Jugar", font=("Arial", 20),
+    Button(menu_frame, text="Jugar", font=("Comic Sans MS", 20),bg="#8b040f", fg="white",
            width=20, command=lambda: iniciar_juego_overlay(ventana, grid_var, indice)).pack(pady=10)
-    Button(menu_frame, text="Configuración", font=("Arial", 20),
+    Button(menu_frame, text="Configuración", font=("Comic Sans MS", 20),bg="#8b040f", fg="white",
            width=20, command=lambda: configuracion.mostrar_configuracion(ventana)).pack(pady=10)
-    Button(menu_frame, text="Salir", font=("Arial", 20),
+    Button(menu_frame, text="Salir", font=("Comic Sans MS", 20),bg="#8b040f", fg="white",
            width=20, command=ventana.destroy).pack(pady=10)
 
     mostrar_patron(canvas_preview)
@@ -250,19 +260,19 @@ def iniciar_juego_overlay(ventana, grid_var, indice):
     subframe_labels_izq.pack(expand=True)
 
     label_titulo = Label(subframe_labels_izq, text="Tiempo transcurrido",
-                         font=("Arial",16), fg="yellow", bg=COLOR_BOTON)
+                         font=("Comic Sans MS",16), fg="yellow", bg=COLOR_BOTON)
     label_titulo.pack(pady=(0,5))
 
     label_timer = Label(subframe_labels_izq, text="00:00",
-                        font=("Arial",18), fg="yellow", bg=COLOR_BOTON)
+                        font=("Comic Sans MS",18), fg="yellow", bg=COLOR_BOTON)
     label_timer.pack(pady=(0,5))
 
-    label_victoria = Label(subframe_labels_izq, text="", font=("Arial",18,"bold"),
+    label_victoria = Label(subframe_labels_izq, text="", font=("Comic Sans MS",18,"bold"),
                             fg="yellow", bg=COLOR_BOTON, justify="center")
     label_victoria.pack(pady=(10,0))
     label_victoria.lower()
 
-    Button(frame_izquierda, text="Volver al menú", font=("Arial",14),
+    Button(frame_izquierda, text="Volver al menú", font=("Comic Sans MS",14),
            bg=COLOR_BOTON, fg="white", command=overlay.destroy).pack(side="bottom", pady=10)
 
     # --- Panel derecho ---
@@ -275,18 +285,18 @@ def iniciar_juego_overlay(ventana, grid_var, indice):
     subframe_labels_records = Frame(frame_central_derecha, bg=COLOR_BOTON)
     subframe_labels_records.place(relx=0.5, rely=0.5, anchor="center")
 
-    Label(subframe_labels_records, text="Records", font=("Arial",16,"bold"),
+    Label(subframe_labels_records, text="Records", font=("Comic Sans MS",16,"bold"),
           fg="yellow", bg=COLOR_BOTON).pack(pady=10)
 
     patron_nombre = f"Patron{indice.get()+1}"
     grid_str = str(grid_var.get())
 
     top_tiempos = config["top_tiempos"].get(patron_nombre, {}).get(grid_str, ["--:--","--:--","--:--"])
-    label_record1 = Label(subframe_labels_records, text=f"1°: {top_tiempos[0]}", font=("Arial",14),
+    label_record1 = Label(subframe_labels_records, text=f"1°: {top_tiempos[0]}", font=("Comic Sans MS",14),
                           fg="white", bg=COLOR_BOTON)
-    label_record2 = Label(subframe_labels_records, text=f"2°: {top_tiempos[1]}", font=("Arial",14),
+    label_record2 = Label(subframe_labels_records, text=f"2°: {top_tiempos[1]}", font=("Comic Sans MS",14),
                           fg="white", bg=COLOR_BOTON)
-    label_record3 = Label(subframe_labels_records, text=f"3°: {top_tiempos[2]}", font=("Arial",14),
+    label_record3 = Label(subframe_labels_records, text=f"3°: {top_tiempos[2]}", font=("Comic Sans MS",14),
                           fg="white", bg=COLOR_BOTON)
     label_record1.pack(pady=5)
     label_record2.pack(pady=5)
@@ -300,7 +310,7 @@ def iniciar_juego_overlay(ventana, grid_var, indice):
         label_record2.config(text="2°: --:--")
         label_record3.config(text="3°: --:--")
 
-    Button(frame_derecha, text="Borrar Records", font=("Arial",14),
+    Button(frame_derecha, text="Borrar Records", font=("Comic Sans MS",14),
            bg=COLOR_BOTON, fg="white", command=borrar_records).pack(side="bottom", pady=10)
 
     # --- Rompecabezas centrado y cuadrado ---
@@ -314,6 +324,7 @@ def iniciar_juego_overlay(ventana, grid_var, indice):
     patron = Rompecabezas.obtener_patron(indice.get() + 1)
     Rompecabezas.cargar_frames(patron)
     Rompecabezas.crear_grid(frame_juego)
+    Rompecabezas.botones_activos = True  # <-- activar botones al empezar
     Rompecabezas.animar(frame_juego)
 
     inicio_tiempo = time.time()
@@ -367,12 +378,12 @@ def mostrar_victoria_overlay(frame_juego, overlay):
     overlay_victoria.place(relx=0.5, rely=0.5, anchor="center")
 
     Label(overlay_victoria, text="¡Rompecabezas resuelto!",
-          font=("Arial", 16), fg="white", bg="#64070f").pack(pady=(10,5))
+          font=("Comic Sans MS", 16), fg="white", bg="#64070f").pack(pady=(10,5))
     Label(overlay_victoria, text=f"Tiempo total: {mins:02d}:{secs:02d}",
-          font=("Arial", 14), fg="white", bg="#64070f").pack(pady=(0,10))
+          font=("Comic Sans MS", 14), fg="white", bg="#64070f").pack(pady=(0,10))
 
     Button(overlay_victoria, text="Volver al menú principal",
-           font=("Arial", 14), bg="#64070f", fg="white",
+           font=("Comic Sans MS", 14), bg="#64070f", fg="white",
            command=lambda: overlay.destroy()).pack(pady=10)
 
 
@@ -423,13 +434,13 @@ def mostrar_victoria(frame_juego):
     contenedor = Frame(victoria_overlay, bg="#383838")
     contenedor.pack(expand=True)
 
-    Label(contenedor, text="¡Rompecabezas resuelto!", font=("Arial", 14),
+    Label(contenedor, text="¡Rompecabezas resuelto!", font=("Comic Sans MS", 14),
           fg="white", bg="#383838").pack(pady=(5,2))
-    Label(contenedor, text=f"Tiempo total: {mins:02d}:{secs:02d}", font=("Arial", 12),
+    Label(contenedor, text=f"Tiempo total: {mins:02d}:{secs:02d}", font=("Comic Sans MS", 12),
           fg="white", bg="#383838").pack(pady=(0,5))
 
     # Botón al primer click
-    Button(contenedor, text="Volver al menú principal", font=("Arial", 14),
+    Button(contenedor, text="Volver al menú principal", font=("Comic Sans MS", 14),
            command=lambda: volver_menu_principal(frame_juego.winfo_toplevel())).pack(pady=5)
 
     # Forzar que el overlay reciba eventos
