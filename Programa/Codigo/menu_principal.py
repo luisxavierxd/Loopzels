@@ -48,6 +48,11 @@ frame_preview = 0
 def mostrar_menu_principal(ventana):
     global frames_preview, frame_preview, grid_var, indice
 
+    from tkinter import Canvas, Frame, Label, Button, IntVar, BOTH, NW, LEFT
+    from PIL import Image, ImageTk
+    import os
+    import configuracion
+
     # Limpiar ventana
     for w in ventana.winfo_children():
         w.destroy()
@@ -84,15 +89,15 @@ def mostrar_menu_principal(ventana):
         fondo_frame_tk = ImageTk.PhotoImage(recorte)
         label_fondo = Label(menu_frame, image=fondo_frame_tk, borderwidth=0)
         label_fondo.place(x=0, y=0, relwidth=1, relheight=1)
-        label_fondo.image = fondo_frame_tk  # mantener referencia
-        label_fondo.lower()  # que quede detrás de los botones
+        label_fondo.image = fondo_frame_tk
+        label_fondo.lower()
 
-        # --- Selección de tamaño del Grid ---
+    # --- Selección de tamaño del Grid ---
     Label(menu_frame, text="Tamaño del Grid:", font=("Arial", 18), fg="white", bg=None).pack(pady=(20,5))
     tamanios = [2,4,6,8,10]
     grid_var = IntVar(value=2)
 
-    botones_frame = Frame(menu_frame, bg=None)
+    botones_frame = Frame(menu_frame, bg="#64070f")  # fondo externo
     botones_frame.pack(pady=5)
 
     botones_tam = []
@@ -100,42 +105,37 @@ def mostrar_menu_principal(ventana):
         grid_var.set(t)
         for b, val in zip(botones_tam, tamanios):
             b.config(bg="NONE" if val==t else "gray30")
-            
-    # Cambiamos el fondo del frame que contiene los botones de tamaño
-    botones_frame.config(bg="#64070f")  # <--- color de fondo externo
 
-    botones_tam = []
     for t in tamanios:
         b = Button(botones_frame, text=f"{t}x{t}", width=4, height=2,
-                bg="gray30", fg="white", font=("Arial",14),
-                activebackground="white", activeforeground="black",
-                command=lambda x=t: seleccionar_tamanio(x))
-        b.pack(side=LEFT, padx=8)  # separación horizontal
+                   bg="gray30", fg="white", font=("Arial",14),
+                   activebackground="white", activeforeground="black",
+                   command=lambda x=t: seleccionar_tamanio(x))
+        b.pack(side=LEFT, padx=8)
         botones_tam.append(b)
-
 
     # --- Patrón animado centrado con navegación ---
     canvas_size = 200
     patrones = [f"Patron{i}.gif" for i in range(1,6)]
     indice = IntVar(value=0)
 
-    patron_frame = Frame(menu_frame, bg=None)
-    patron_frame.pack(pady=10)  # menos espacio vertical arriba y abajo
-
-      # Cambiamos el fondo del frame que contiene los botones
-    patron_frame = Frame(menu_frame, bg="#64070f")  # <--- color de fondo externo
+    patron_frame = Frame(menu_frame, bg="#64070f")
     patron_frame.pack(pady=10)
 
+    # Espacio entre botones y canvas
+    ESPACIO_LATERAL = 20
+
     # Botón "<"
-    btn_prev = Button(patron_frame, text="<", width=2,
-                    bg="gray30", fg="white",
-                    activebackground="white", activeforeground="black",
-                    command=lambda: cambiar_patron(-1, canvas_preview))
-    btn_prev.pack(side=LEFT, padx=(0,2), pady=0)
+    btn_prev = Button(patron_frame, text="<", width=2, height=1,
+                      bg="gray30", fg="white",
+                      activebackground="white", activeforeground="black",
+                      font=("Arial", 16, "bold"),
+                      command=lambda: cambiar_patron(-1, canvas_preview))
+    btn_prev.pack(side=LEFT, padx=(0, ESPACIO_LATERAL))
 
     # Frame centrador para el canvas
-    canvas_container = Frame(patron_frame, bg="#64070f")  # mismo color que el frame padre
-    canvas_container.pack(side=LEFT, pady=0)
+    canvas_container = Frame(patron_frame, bg="#64070f")
+    canvas_container.pack(side=LEFT)
 
     # Canvas del patrón
     canvas_preview = Canvas(canvas_container, width=canvas_size, height=canvas_size,
@@ -143,25 +143,26 @@ def mostrar_menu_principal(ventana):
     canvas_preview.pack()
 
     # Botón ">"
-    btn_next = Button(patron_frame, text=">", width=2,
-                    bg="gray30", fg="white",
-                    activebackground="white", activeforeground="black",
-                    command=lambda: cambiar_patron(1, canvas_preview))
-    btn_next.pack(side=LEFT, padx=(2,0), pady=0)
-
+    btn_next = Button(patron_frame, text=">", width=2, height=1,
+                      bg="gray30", fg="white",
+                      activebackground="white", activeforeground="black",
+                      font=("Arial", 16, "bold"),
+                      command=lambda: cambiar_patron(1, canvas_preview))
+    btn_next.pack(side=LEFT, padx=(ESPACIO_LATERAL, 0))
 
     # --- Botones verticales: Configuración → Jugar → Salir ---
     Button(menu_frame, text="Jugar", font=("Arial", 20),
-       width=20, command=lambda: iniciar_juego_overlay(ventana, grid_var, indice)).pack(pady=10)
+           width=20, command=lambda: iniciar_juego_overlay(ventana, grid_var, indice)).pack(pady=10)
     Button(menu_frame, text="Configuración", font=("Arial", 20),
-        width=20, command=lambda: configuracion.mostrar_configuracion(ventana)).pack(pady=10)
+           width=20, command=lambda: configuracion.mostrar_configuracion(ventana)).pack(pady=10)
     Button(menu_frame, text="Salir", font=("Arial", 20),
-        width=20, command=ventana.destroy).pack(pady=10)
+           width=20, command=ventana.destroy).pack(pady=10)
 
     mostrar_patron(canvas_preview)
 
     # --- Finalmente colocar fondo camuflado ---
     ventana.after(50, colocar_fondo_camuflado)
+
 
 
 
