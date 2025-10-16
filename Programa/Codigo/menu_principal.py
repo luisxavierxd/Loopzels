@@ -131,10 +131,10 @@ def mostrar_menu_principal(ventana):
 
 
     # --- Botones verticales: Configuración → Jugar → Salir ---
+    Button(menu_frame, text="Jugar", font=("Arial", 20),
+       width=20, command=lambda: iniciar_juego_overlay(ventana, grid_var, indice)).pack(pady=10)
     Button(menu_frame, text="Configuración", font=("Arial", 20),
         width=20, command=lambda: configuracion.mostrar_configuracion(ventana)).pack(pady=10)
-    Button(menu_frame, text="Jugar", font=("Arial", 20),
-        width=20, command=lambda: iniciar_juego(ventana, grid_var, indice, menu_frame)).pack(pady=10)
     Button(menu_frame, text="Salir", font=("Arial", 20),
         width=20, command=ventana.destroy).pack(pady=10)
 
@@ -181,54 +181,119 @@ def animar_preview(canvas):
         frame_preview = (frame_preview + 1) % len(frames_preview)
         canvas.after(FRAMERATE, lambda: animar_preview(canvas))
 
-def iniciar_juego(ventana, grid_var, indice, menu_frame):
-    global inicio_tiempo, label_timer, frame_juego, frame_principal, timer_after_id
+def iniciar_juego_overlay(ventana, grid_var, indice):
+    COLOR_BOTON = "#64070f"
+    COLOR_FONDO_MENU = "#a81717"
 
-    # Limpiar cualquier frame previo
-    if 'frame_principal' in globals() and frame_principal:
-        frame_principal.destroy()
+    overlay = Frame(ventana)
+    overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
 
-    menu_frame.destroy()
+    # Fondo imagen
+    screen_w, screen_h = ventana.winfo_width(), ventana.winfo_height()
+    ruta_fondo = os.path.join(os.path.dirname(__file__), "..", "Assets", "General", "fondo.png")
+    fondo_img = Image.open(ruta_fondo).resize((screen_w, screen_h), Image.Resampling.LANCZOS)
+    fondo_tk = ImageTk.PhotoImage(fondo_img)
+    Label(overlay, image=fondo_tk).place(x=0, y=0, relwidth=1, relheight=1)
+    overlay.fondo_ref = fondo_tk
+
+    # Contenedor central
+    container = Frame(overlay, width=1000, height=700, bg=COLOR_FONDO_MENU)
+    container.place(relx=0.5, rely=0.5, anchor="center")
+    container.pack_propagate(False)
+
+    # --- Panel izquierdo ---
+    frame_izquierda = Frame(container, bg=COLOR_BOTON)
+    frame_izquierda.pack(side="left", fill="y", padx=20, pady=20)
+    frame_izquierda.config(width=250)  # Puedes ajustar el ancho aquí
+    frame_izquierda.pack_propagate(False)
+    frame_izquierda.lift()  # Sobre la imagen de fondo
+
+    # Frame central para centrar verticalmente los labels
+    frame_central = Frame(frame_izquierda, bg=COLOR_BOTON)
+    frame_central.pack(expand=True, fill="both")  # ocupa todo el espacio vertical
+
+    # Subframe que contendrá los labels y se centrará
+    subframe_labels = Frame(frame_central, bg=COLOR_BOTON)
+    subframe_labels.pack(expand=True)  # Centrado verticalmente
+
+    # Label título del timer
+    label_titulo = Label(subframe_labels, text="Tiempo transcurrido",
+                        font=("Arial",16), fg="yellow", bg=COLOR_BOTON)
+    label_titulo.pack(pady=(0,5))
+
+    # Timer real
+    label_timer = Label(subframe_labels, text="00:00",
+                        font=("Arial",18), fg="yellow", bg=COLOR_BOTON)
+    label_timer.pack(pady=(0,5))
+
+    # Label de victoria (invisible al inicio)
+    label_victoria = Label(subframe_labels, text="", font=("Arial",18,"bold"),
+                        fg="yellow", bg=COLOR_BOTON, justify="center")
+    label_victoria.pack(pady=(10,0))
+    label_victoria.lower()  # Al inicio detrás del timer
+
+    # Botón siempre abajo
+    Button(frame_izquierda, text="Volver al menú", font=("Arial",14),
+        bg=COLOR_BOTON, fg="white", command=overlay.destroy).pack(side="bottom", pady=10)
+  
+    # --- Rompecabezas centrado ---
+    frame_juego = Frame(container, width=600, height=600, bg=COLOR_FONDO_MENU)
+    frame_juego.pack(side="left", expand=True, padx=20, pady=20)
+    frame_juego.pack_propagate(False)
 
     # Configurar rompecabezas
-    tamanio = grid_var.get()
-    Rompecabezas.GRID = tamanio
+    Rompecabezas.GRID = grid_var.get()
     Rompecabezas.mezclar_piezas()
     patron = Rompecabezas.obtener_patron(indice.get() + 1)
     Rompecabezas.cargar_frames(patron)
-
-    # --- Frame contenedor horizontal ---
-    frame_principal = Frame(ventana, bg="#383838")
-    frame_principal.pack(expand=True)  # expand para ocupar todo el espacio disponible
-
-    # --- Columna izquierda: Timer ---
-    frame_timer = Frame(frame_principal, width=200, height=100, bg="#383838")
-    frame_timer.pack(side="left", padx=20, pady=20)
-
-    Label(frame_timer, text="Tiempo transcurrido:", font=("Arial", 18), fg="white",
-          bg="#383838", anchor="center").pack(fill="x")
-    label_timer = Label(frame_timer, text="00:00", font=("Arial", 18), fg="white",
-                        bg="#383838", anchor="center")
-    label_timer.pack(fill="x")
-
-    # --- Botón fijo: volver al menú principal debajo del timer ---
-    boton_volver = Button(frame_timer, text="Volver al menú principal", font=("Arial", 14),
-                          command=lambda: volver_menu_principal(ventana))
-    boton_volver.pack(pady=10)
-
-    # --- Columna central: Rompecabezas ---
-    frame_juego = Frame(frame_principal, width=TAM_PUZZLE, height=TAM_PUZZLE, bg="#383838")
-    frame_juego.pack(side="left", padx=20, pady=20)
-
     Rompecabezas.crear_grid(frame_juego)
     Rompecabezas.animar(frame_juego)
 
-    # Iniciar timer
+    # Timer en tiempo real
     inicio_tiempo = time.time()
-    actualizar_timer_interno(label_timer)
+    def actualizar_timer():
+        segundos = int(time.time() - inicio_tiempo)
+        mins, secs = divmod(segundos, 60)
+        tiempo_actual = f"{mins:02d}:{secs:02d}"
+        label_timer.config(text=tiempo_actual)
+        label_timer.after(1000, actualizar_timer)
+    actualizar_timer()
 
     # Callback de victoria
-    Rompecabezas.mostrar_victoria_callback = lambda: mostrar_victoria(frame_juego)
+    def mostrar_victoria():
+        global timer_after_id
+        # Detener timer
+        if timer_after_id is not None:
+            label_timer.after_cancel(timer_after_id)
+            timer_after_id = None
+
+        # Destruir título y timer en tiempo real
+        label_titulo.destroy()
+        label_timer.destroy()
+
+        # Mostrar victoria con tiempo final
+        tiempo_final = time.strftime('%M:%S', time.gmtime(int(time.time() - inicio_tiempo)))
+        label_victoria.config(text=f"¡Rompecabezas \ncompletado!\nTiempo total: {tiempo_final}")
+        label_victoria.lift()
+    Rompecabezas.mostrar_victoria_callback = mostrar_victoria
+
+
+
+def mostrar_victoria_overlay(frame_juego, overlay):
+    tiempo_total = int(time.time() - getattr(frame_juego, "inicio_tiempo", time.time()))
+    mins, secs = divmod(tiempo_total, 60)
+
+    overlay_victoria = Frame(overlay, bg="#64070f")
+    overlay_victoria.place(relx=0.5, rely=0.5, anchor="center")
+
+    Label(overlay_victoria, text="¡Rompecabezas resuelto!",
+          font=("Arial", 16), fg="white", bg="#64070f").pack(pady=(10,5))
+    Label(overlay_victoria, text=f"Tiempo total: {mins:02d}:{secs:02d}",
+          font=("Arial", 14), fg="white", bg="#64070f").pack(pady=(0,10))
+
+    Button(overlay_victoria, text="Volver al menú principal",
+           font=("Arial", 14), bg="#64070f", fg="white",
+           command=lambda: overlay.destroy()).pack(pady=10)
 
 
 def actualizar_timer_interno(label):
@@ -305,27 +370,21 @@ def volver_menu_principal(ventana):
 
     # Cancelar timers pendientes de forma segura
     for t in [timer_after_id, animacion_after_id]:
-        if t is not None:
-            try:
-                ventana.after_cancel(t)
-            except Exception:
-                pass
+        if t:
+            try: ventana.after_cancel(t)
+            except: pass
 
     timer_after_id = None
     animacion_after_id = None
-
-    # Limpiar variables globales
+    inicio_tiempo = None
     frames_preview.clear()
     frame_preview = 0
-    inicio_tiempo = None
 
-    # Destruir TODO el contenido de la ventana raíz
-    # Usamos una copia de la lista de widgets para evitar problemas al destruir
+    # Limpiar toda la ventana
     for widget in list(ventana.winfo_children()):
         try:
             widget.destroy()
-        except Exception:
-            pass
+        except: pass
 
-    # Mostrar menú principal limpio
+    # Mostrar menú limpio
     mostrar_menu_principal(ventana)
