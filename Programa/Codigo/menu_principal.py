@@ -4,9 +4,29 @@ from tkinter import *
 from PIL import Image, ImageTk, ImageEnhance, ImageOps, ImageEnhance
 import Rompecabezas
 import configuracion
-import random, os, sys, time
+import random, os, sys, time, json
 
-# --- Configuración global ---
+#Archivos permamentes
+CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
+
+def cargar_config():
+    if os.path.exists(CONFIG_PATH):
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    # Estructura mínima si no existe
+    return {
+        "volumen": 0.8,
+        "top_tiempos": {
+            f"Patron{i}": {str(g): ["--:--","--:--","--:--"] for g in [2,4,6,8,10]}
+            for i in range(1,6)
+        }
+    }
+
+def guardar_config(config):
+    with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+        json.dump(config, f, indent=4)
+
+
 # --- Variables globales de fondo ---
 COLOR_FONDO_NEGRO = "red"      # colores del overlay si quieres
 COLOR_FONDO_BLANCO = "yellow"
@@ -182,8 +202,18 @@ def animar_preview(canvas):
         canvas.after(FRAMERATE, lambda: animar_preview(canvas))
 
 def iniciar_juego_overlay(ventana, grid_var, indice):
+    import json, time
+    import Rompecabezas
+    import os
+    from PIL import Image, ImageTk
+
     COLOR_BOTON = "#64070f"
     COLOR_FONDO_MENU = "#a81717"
+
+    # --- Cargar config.json ---
+    config_path = os.path.join(os.path.dirname(__file__), "config.json")
+    with open(config_path, "r") as f:
+        config = json.load(f)
 
     overlay = Frame(ventana)
     overlay.place(relx=0, rely=0, relwidth=1, relheight=1)
@@ -196,52 +226,88 @@ def iniciar_juego_overlay(ventana, grid_var, indice):
     Label(overlay, image=fondo_tk).place(x=0, y=0, relwidth=1, relheight=1)
     overlay.fondo_ref = fondo_tk
 
-    # Contenedor central
-    container = Frame(overlay, width=1000, height=700, bg=COLOR_FONDO_MENU)
+    # --- Contenedor central ---
+    LADO_CUADRADO = 600
+    PAD_X = 20
+    PAD_Y = 20
+    PANEL_ANCHO = 250
+    container_width = PANEL_ANCHO*2 + LADO_CUADRADO + PAD_X*4
+    container_height = LADO_CUADRADO + PAD_Y*2
+
+    container = Frame(overlay, width=container_width, height=container_height, bg=COLOR_FONDO_MENU)
     container.place(relx=0.5, rely=0.5, anchor="center")
     container.pack_propagate(False)
 
     # --- Panel izquierdo ---
-    frame_izquierda = Frame(container, bg=COLOR_BOTON)
-    frame_izquierda.pack(side="left", fill="y", padx=20, pady=20)
-    frame_izquierda.config(width=250)  # Puedes ajustar el ancho aquí
+    frame_izquierda = Frame(container, bg=COLOR_BOTON, width=PANEL_ANCHO)
+    frame_izquierda.pack(side="left", fill="y", padx=PAD_X, pady=PAD_Y)
     frame_izquierda.pack_propagate(False)
-    frame_izquierda.lift()  # Sobre la imagen de fondo
 
-    # Frame central para centrar verticalmente los labels
-    frame_central = Frame(frame_izquierda, bg=COLOR_BOTON)
-    frame_central.pack(expand=True, fill="both")  # ocupa todo el espacio vertical
+    frame_central_izq = Frame(frame_izquierda, bg=COLOR_BOTON)
+    frame_central_izq.pack(expand=True, fill="both")
+    subframe_labels_izq = Frame(frame_central_izq, bg=COLOR_BOTON)
+    subframe_labels_izq.pack(expand=True)
 
-    # Subframe que contendrá los labels y se centrará
-    subframe_labels = Frame(frame_central, bg=COLOR_BOTON)
-    subframe_labels.pack(expand=True)  # Centrado verticalmente
-
-    # Label título del timer
-    label_titulo = Label(subframe_labels, text="Tiempo transcurrido",
-                        font=("Arial",16), fg="yellow", bg=COLOR_BOTON)
+    label_titulo = Label(subframe_labels_izq, text="Tiempo transcurrido",
+                         font=("Arial",16), fg="yellow", bg=COLOR_BOTON)
     label_titulo.pack(pady=(0,5))
 
-    # Timer real
-    label_timer = Label(subframe_labels, text="00:00",
+    label_timer = Label(subframe_labels_izq, text="00:00",
                         font=("Arial",18), fg="yellow", bg=COLOR_BOTON)
     label_timer.pack(pady=(0,5))
 
-    # Label de victoria (invisible al inicio)
-    label_victoria = Label(subframe_labels, text="", font=("Arial",18,"bold"),
-                        fg="yellow", bg=COLOR_BOTON, justify="center")
+    label_victoria = Label(subframe_labels_izq, text="", font=("Arial",18,"bold"),
+                            fg="yellow", bg=COLOR_BOTON, justify="center")
     label_victoria.pack(pady=(10,0))
-    label_victoria.lower()  # Al inicio detrás del timer
+    label_victoria.lower()
 
-    # Botón siempre abajo
     Button(frame_izquierda, text="Volver al menú", font=("Arial",14),
-        bg=COLOR_BOTON, fg="white", command=overlay.destroy).pack(side="bottom", pady=10)
-  
-    # --- Rompecabezas centrado ---
-    frame_juego = Frame(container, width=600, height=600, bg=COLOR_FONDO_MENU)
-    frame_juego.pack(side="left", expand=True, padx=20, pady=20)
+           bg=COLOR_BOTON, fg="white", command=overlay.destroy).pack(side="bottom", pady=10)
+
+    # --- Panel derecho ---
+    frame_derecha = Frame(container, bg=COLOR_BOTON, width=PANEL_ANCHO)
+    frame_derecha.pack(side="right", fill="y", padx=PAD_X, pady=PAD_Y)
+    frame_derecha.pack_propagate(False)
+
+    frame_central_derecha = Frame(frame_derecha, bg=COLOR_BOTON)
+    frame_central_derecha.pack(expand=True, fill="both")
+    subframe_labels_records = Frame(frame_central_derecha, bg=COLOR_BOTON)
+    subframe_labels_records.place(relx=0.5, rely=0.5, anchor="center")
+
+    Label(subframe_labels_records, text="Records", font=("Arial",16,"bold"),
+          fg="yellow", bg=COLOR_BOTON).pack(pady=10)
+
+    patron_nombre = f"Patron{indice.get()+1}"
+    grid_str = str(grid_var.get())
+
+    top_tiempos = config["top_tiempos"].get(patron_nombre, {}).get(grid_str, ["--:--","--:--","--:--"])
+    label_record1 = Label(subframe_labels_records, text=f"1°: {top_tiempos[0]}", font=("Arial",14),
+                          fg="white", bg=COLOR_BOTON)
+    label_record2 = Label(subframe_labels_records, text=f"2°: {top_tiempos[1]}", font=("Arial",14),
+                          fg="white", bg=COLOR_BOTON)
+    label_record3 = Label(subframe_labels_records, text=f"3°: {top_tiempos[2]}", font=("Arial",14),
+                          fg="white", bg=COLOR_BOTON)
+    label_record1.pack(pady=5)
+    label_record2.pack(pady=5)
+    label_record3.pack(pady=5)
+
+    def borrar_records():
+        config["top_tiempos"].setdefault(patron_nombre, {})[grid_str] = ["--:--","--:--","--:--"]
+        with open(config_path, "w") as f:
+            json.dump(config, f, indent=4)
+        label_record1.config(text="1°: --:--")
+        label_record2.config(text="2°: --:--")
+        label_record3.config(text="3°: --:--")
+
+    Button(frame_derecha, text="Borrar Records", font=("Arial",14),
+           bg=COLOR_BOTON, fg="white", command=borrar_records).pack(side="bottom", pady=10)
+
+    # --- Rompecabezas centrado y cuadrado ---
+    frame_juego = Frame(container, width=LADO_CUADRADO, height=LADO_CUADRADO, bg=COLOR_FONDO_MENU)
+    frame_juego.place(relx=0.5, rely=0.5, anchor="center")
     frame_juego.pack_propagate(False)
 
-    # Configurar rompecabezas
+    # --- Código Rompecabezas ---
     Rompecabezas.GRID = grid_var.get()
     Rompecabezas.mezclar_piezas()
     patron = Rompecabezas.obtener_patron(indice.get() + 1)
@@ -249,32 +315,45 @@ def iniciar_juego_overlay(ventana, grid_var, indice):
     Rompecabezas.crear_grid(frame_juego)
     Rompecabezas.animar(frame_juego)
 
-    # Timer en tiempo real
     inicio_tiempo = time.time()
+    timer_after_id = None
+
     def actualizar_timer():
+        nonlocal timer_after_id
         segundos = int(time.time() - inicio_tiempo)
         mins, secs = divmod(segundos, 60)
         tiempo_actual = f"{mins:02d}:{secs:02d}"
         label_timer.config(text=tiempo_actual)
-        label_timer.after(1000, actualizar_timer)
+        timer_after_id = label_timer.after(1000, actualizar_timer)
     actualizar_timer()
 
-    # Callback de victoria
+    # --- Callback de victoria ---
     def mostrar_victoria():
-        global timer_after_id
-        # Detener timer
+        nonlocal timer_after_id
         if timer_after_id is not None:
             label_timer.after_cancel(timer_after_id)
             timer_after_id = None
 
-        # Destruir título y timer en tiempo real
         label_titulo.destroy()
         label_timer.destroy()
 
-        # Mostrar victoria con tiempo final
         tiempo_final = time.strftime('%M:%S', time.gmtime(int(time.time() - inicio_tiempo)))
         label_victoria.config(text=f"¡Rompecabezas \ncompletado!\nTiempo total: {tiempo_final}")
         label_victoria.lift()
+
+        # Actualizar records
+        tiempos = config["top_tiempos"].setdefault(patron_nombre, {}).setdefault(grid_str, ["--:--","--:--","--:--"])
+        tiempos.append(tiempo_final)
+        tiempos = sorted([t for t in tiempos if t != "--:--"])[:3]
+        while len(tiempos) < 3:
+            tiempos.append("--:--")
+        config["top_tiempos"][patron_nombre][grid_str] = tiempos
+        with open(config_path, "w") as f:
+            json.dump(config, f, indent=4)
+        label_record1.config(text=f"1°: {tiempos[0]}")
+        label_record2.config(text=f"2°: {tiempos[1]}")
+        label_record3.config(text=f"3°: {tiempos[2]}")
+
     Rompecabezas.mostrar_victoria_callback = mostrar_victoria
 
 
