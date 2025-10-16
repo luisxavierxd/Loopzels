@@ -1,7 +1,7 @@
 # Rompecabezas.py
 
 from tkinter import *
-from PIL import Image, ImageTk, ImageEnhance
+from PIL import Image, ImageTk, ImageEnhance,ImageOps
 import random, os, sys
 
 # --- Configuración ---
@@ -118,11 +118,22 @@ def click_pieza(i):
 def actualizar_canvas(idx, brillante=False):
     canvas = botones[idx]
     frame = frames_originales[orden_actual[idx]][frame_actual[orden_actual[idx]]]
+
+    # Ajustar brillo sin modificar el frame original
     frame_mod = ImageEnhance.Brightness(frame).enhance(1.3 if brillante else FACTOR_BRILLO)
-    img_tk = ImageTk.PhotoImage(frame_mod)
+
+    # Convertir a RGBA y colorizar solo para mostrar
+    frame_color = ImageOps.colorize(frame_mod.convert("L"), black="#FF0000", white="#FFFF00").convert("RGBA")
+
+    # Crear imagen Tk y actualizar canvas
+    img_tk = ImageTk.PhotoImage(frame_color)
     canvas.itemconfig(canvas.img_id, image=img_tk)
     canvas.image = img_tk
-    imagenes_canvas.append(img_tk)
+    if idx >= len(imagenes_canvas):
+        imagenes_canvas.append(img_tk)
+    else:
+        imagenes_canvas[idx] = img_tk
+
 
 # --- Animación ---
 def animar(parent):
