@@ -53,10 +53,7 @@ def detener_musica():
     pygame.mixer.music.stop()
 
 def set_volumen(volumen: float):
-    """
-    Cambia el volumen de la música.
-    volumen: float entre 0.0 y 1.0
-    """
+
     volumen = max(0.0, min(volumen, 1.0))
     if pygame.mixer.music.get_busy():
         pygame.mixer.music.set_volume(volumen)

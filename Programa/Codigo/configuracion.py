@@ -82,10 +82,6 @@ def mostrar_configuracion(ventana):
         if audio.musica_iniciada:
             import pygame
             pygame.mixer.music.set_volume(pygame_vol)
-        if audio.sfx_boton:
-            audio.sfx_boton.set_volume(pygame_vol)
-        if audio.sfx_victoria:
-            audio.sfx_victoria.set_volume(pygame_vol)
 
         # Guardar configuración
         config["volumen"] = pygame_vol

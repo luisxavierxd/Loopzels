@@ -115,7 +115,7 @@ def mostrar_menu_principal(ventana):
     def seleccionar_tamanio(t):
         grid_var.set(t)
         for b, val in zip(botones_tam, tamanios):
-            b.config(bg="NONE" if val==t else "gray30")
+            b.config(bg="NONE" if val==t else "#8b040f")
 
     for t in tamanios:
         b = Button(botones_frame, text=f"{t}x{t}", width=5, height=2,

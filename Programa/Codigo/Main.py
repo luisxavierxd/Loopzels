@@ -6,7 +6,7 @@ import audio
 # --- Inicialización de la ventana ---
 ventana = tk.Tk()
 ventana.attributes('-fullscreen', True)
-ventana.configure(bg="#383838")
+#   ventana.configure(bg="#383838")
 ventana.title("Loopzels")
 
 # Inicializar audio de forma segura
