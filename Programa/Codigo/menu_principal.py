@@ -17,7 +17,7 @@ def cargar_config():
     return {
         "volumen": 0.8,
         "top_tiempos": {
-            f"Patron{i}": {str(g): ["--:--","--:--","--:--"] for g in [2,4,6,8,10]}
+            f"Patron{i}": {str(g): ["--:--","--:--","--:--"] for g in (2,3,4,5,6)}
             for i in range(1,6)
         }
     }
