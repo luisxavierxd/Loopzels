@@ -105,7 +105,7 @@ def mostrar_menu_principal(ventana):
     label_tamano.pack(pady=(20,5))
 
 
-    tamanios = [2,4,6,8,10]
+    tamanios = (2,4,6,8,10)
     grid_var = IntVar(value=2)
 
     botones_frame = Frame(menu_frame, bg="#64070f")  # fondo externo
@@ -185,7 +185,13 @@ def cambiar_patron(d, canvas):
     mostrar_patron(canvas)
 
 def cargar_preview_recolor(ruta, canvas):
-    global frames_preview, frame_preview
+    global frames_preview, frame_preview, animacion_after_id
+    if animacion_after_id:  # detener animación previa
+        try:
+            canvas.after_cancel(animacion_after_id)
+        except:
+            pass
+        animacion_after_id = None
     canvas.update_idletasks()
     size = canvas.winfo_width() or 200
 
@@ -205,12 +211,13 @@ def cargar_preview_recolor(ruta, canvas):
     animar_preview(canvas)
 
 def animar_preview(canvas):
-    global frames_preview, frame_preview
+    global frames_preview, frame_preview, animacion_after_id
     if frames_preview:
         canvas.delete("all")
-        canvas.create_image(canvas.winfo_width()//2, canvas.winfo_height()//2, image=frames_preview[frame_preview])
+        canvas.create_image(canvas.winfo_width()//2, canvas.winfo_height()//2,
+                            image=frames_preview[frame_preview])
         frame_preview = (frame_preview + 1) % len(frames_preview)
-        canvas.after(FRAMERATE, lambda: animar_preview(canvas))
+        animacion_after_id = canvas.after(FRAMERATE, lambda: animar_preview(canvas))
 
 def iniciar_juego_overlay(ventana, grid_var, indice):
     import json, time
