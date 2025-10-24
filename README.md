@@ -1,6 +1,6 @@
-# 🧩 Rompecabezas Animado
+# 🧩 Loopzels
 
-Rompecabezas Animado es un juego interactivo diseñado para ejercitar la mente mediante la resolución de rompecabezas sobre patrones geométricos animados. Cada partida es un desafío único que combina lógica, observación y diversión.
+Loopzels es un juego interactivo diseñado para ejercitar la mente mediante la resolución de rompecabezas sobre patrones geométricos animados. Cada partida es un desafío único que combina lógica, observación y diversión.
 
 # 🎮 Características
 
