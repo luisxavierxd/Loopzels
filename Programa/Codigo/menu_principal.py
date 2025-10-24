@@ -105,7 +105,7 @@ def mostrar_menu_principal(ventana):
     label_tamano.pack(pady=(20,5))
 
 
-    tamanios = (2,4,6,8,10)
+    tamanios = (2,3,4,5,6)
     grid_var = IntVar(value=2)
 
     botones_frame = Frame(menu_frame, bg="#64070f")  # fondo externo
