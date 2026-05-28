@@ -4,7 +4,7 @@ from tkinter import *
 from PIL import Image, ImageTk, ImageEnhance, ImageOps, ImageEnhance
 import Rompecabezas
 import configuracion
-import random, os, sys, time, json
+import random, os, sys, time, json, audio
 
 #Archivos permamentes
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
@@ -166,7 +166,7 @@ def mostrar_menu_principal(ventana):
     Button(menu_frame, text="Configuración", font=("Comic Sans MS", 20),bg="#8b040f", fg="white",
            width=20, command=lambda: configuracion.mostrar_configuracion(ventana)).pack(pady=10)
     Button(menu_frame, text="Salir", font=("Comic Sans MS", 20),bg="#8b040f", fg="white",
-           width=20, command=ventana.destroy).pack(pady=10)
+           width=20, command=lambda:[ventana.destroy(),audio.detener_musica()]).pack(pady=10)
 
     mostrar_patron(canvas_preview)
 

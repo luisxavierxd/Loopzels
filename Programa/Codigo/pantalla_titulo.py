@@ -1,3 +1,5 @@
+#pantalla_titulo.py
+
 import os
 import sys
 import threading
@@ -201,7 +203,7 @@ class PantallaTitulo:
             activeforeground="black",
             width=12,
             height=1,
-            command=self.ventana.destroy
+            command=lambda:[self.ventana.destroy(),audio.detener_musica()],
         ).place(relx=0.5, rely=0.7, anchor="center")
 
         # Inicia la animación del logo si hay más de un frame

@@ -2,6 +2,7 @@
 import tkinter as tk
 import pantalla_titulo
 import audio
+import sys
 
 # --- Inicialización de la ventana ---
 ventana = tk.Tk()
@@ -13,6 +14,10 @@ audio.inicializar_audio()
 
 # Mostrar pantalla de título
 pantalla_titulo.mostrar_pantalla_titulo(ventana)
+def cerrar():
+    ventana.destroy()
+    sys.exit()
 
-while True:
-    ventana.mainloop()
+ventana.protocol("WM_DELETE_WINDOW", cerrar)
+
+ventana.mainloop()
