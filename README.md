@@ -210,9 +210,11 @@ Los records pueden borrarse individualmente desde la pantalla de partida con el 
 
 ## Autores
 
-Desarrollado por estudiantes de ingenieria como proyecto para Expo-Ingenierias.
+Desarrollado por estudiantes de ingenieria como proyecto para clase de programación.
 
 - Luis Xavier Garcia — Desarrollo principal
+- Diego Peralta Soto — Artista principal
+- Mariann Itzel Sanchez — Programación y documentación
 
 ---
 
