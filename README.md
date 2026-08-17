@@ -4,6 +4,11 @@
 
 ---
 
+## Descarga en itch.io
+
+Puedes descargar, jugar y apoyar el proyecto directamente desde nuestra página oficial en itch.io:
+[Itch.io](https://cheseecakepay.itch.io/loopzels)
+
 ## Descripcion del Proyecto (Expo Ingenierias)
 
 ### El Problema — Por que existe Loopzels
